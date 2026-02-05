@@ -8,7 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; background-color: #0f172a; }
+        
+        /* Video Background CSS */
+        .video-bg {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            filter: brightness(0.4); /* Menjaga teks tetap kontras */
+        }
+
         .product-card { 
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(10px); 
@@ -21,7 +34,6 @@
             transform: translateY(-3px);
             background: rgba(59, 130, 246, 0.08);
         }
-        /* Modal Style */
         #orderModal {
             display: none;
             position: fixed;
@@ -35,9 +47,18 @@
         }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 antialiased">
+<body class="text-slate-200 antialiased">
 
-    <nav class="sticky top-0 z-50 bg-[#0f172a]/90 backdrop-blur-md py-4 px-6 border-b border-slate-800">
+    <video autoplay loop muted playsinline id="bgVideo" class="video-bg">
+        <source src="IKYSTORE.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <button onclick="toggleMute()" class="fixed top-24 right-6 z-50 bg-white/10 backdrop-blur-md p-3 rounded-full border border-white/20 hover:bg-white/20 transition-all active:scale-95">
+        <i id="muteIcon" class="fas fa-volume-mute"></i>
+    </button>
+
+    <nav class="sticky top-0 z-50 bg-[#0f172a]/70 backdrop-blur-md py-4 px-6 border-b border-slate-800">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-extrabold tracking-tighter text-blue-500">IKY STORE</h1>
             <div class="flex gap-5">
@@ -47,7 +68,7 @@
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4 pb-32 pt-10">
+    <main class="max-w-4xl mx-auto px-4 pb-32 pt-10 relative z-10">
         
         <header class="text-center mb-16">
             <div class="inline-block px-4 py-1 rounded-full border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6 bg-blue-500/5">ORDER VIA WHATSAPP / TELEGRAM</div>
@@ -123,7 +144,7 @@
             </div>
         </div>
 
-        <div class="fixed bottom-6 right-6 flex flex-col gap-4">
+        <div class="fixed bottom-6 right-6 flex flex-col gap-4 z-50">
             <a href="https://wa.me/85590447128" class="bg-green-600 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-2xl hover:scale-110 transition-all"><i class="fab fa-whatsapp text-white"></i></a>
             <a href="https://t.me/BK1KY" class="bg-blue-500 w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-2xl hover:scale-110 transition-all"><i class="fab fa-telegram-plane text-white"></i></a>
         </div>
@@ -145,12 +166,25 @@
         </div>
     </div>
 
-    <footer class="text-center py-16 border-t border-slate-800 bg-slate-900/50">
+    <footer class="text-center py-16 border-t border-slate-800 bg-slate-900/50 relative z-10">
         <p class="text-blue-400 font-bold text-lg mb-2">"Puas Beritahu Teman, Tidak Puas Beritahu Admin"</p>
         <p class="text-slate-500 text-xs tracking-widest uppercase italic">IKY STORE &copy; 2026</p>
     </footer>
 
     <script>
+        // Fungsi Suara Video (Mute/Unmute)
+        function toggleMute() {
+            const video = document.getElementById('bgVideo');
+            const icon = document.getElementById('muteIcon');
+            if (video.muted) {
+                video.muted = false;
+                icon.className = "fas fa-volume-up";
+            } else {
+                video.muted = true;
+                icon.className = "fas fa-volume-mute";
+            }
+        }
+
         function openOrder(product) {
             const encodedMsg = encodeURIComponent("Halo IKY STORE, saya mau order " + product);
             document.getElementById('productTitle').innerText = product;
@@ -166,5 +200,4 @@
         }
     </script>
 </body>
-
 </html>
