@@ -17,6 +17,7 @@
         .btn-pink:hover { background-color: #ef7491; color: white; }
         .payment-info { display: none; background: #ffffff; border-radius: 10px; padding: 15px; margin-top: 10px; border: 1px dashed var(--bella-pink); }
         .total-box { background: #ffd1dc; padding: 15px; border-radius: 10px; font-size: 1.2rem; font-weight: bold; color: #d63384; }
+        #upload-section { display: none; }
     </style>
 </head>
 <body>
@@ -33,21 +34,18 @@
             <div class="card card-product p-3" onclick="selectProduct('Simcard Tsel', 100, 'Baht', 10, this)">
                 <h6 class="fw-bold">Simcard Tsel</h6>
                 <p class="text-danger fw-bold mb-1">100 Baht / pcs</p>
-                <p class="small text-muted">Min. 10 pcs</p>
             </div>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card card-product p-3" onclick="selectProduct('Simcard Byu', 80, 'Baht', 10, this)">
                 <h6 class="fw-bold">Simcard Byu</h6>
                 <p class="text-danger fw-bold mb-1">80 Baht / pcs</p>
-                <p class="small text-muted">Min. 10 pcs</p>
             </div>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card card-product p-3" onclick="selectProduct('Database 1000', 200000, 'Rp', 1, this)">
                 <h6 class="fw-bold">Database 1000</h6>
                 <p class="text-danger fw-bold mb-1">Rp 200.000</p>
-                <p class="small text-muted">Data Premium</p>
             </div>
         </div>
     </div>
@@ -70,14 +68,14 @@
 
                 <div class="total-box text-center mb-4" id="box-total">Total: -</div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
+                <div class="row mb-3">
+                    <div class="col-md-6">
                         <label class="form-label">Nama Lengkap</label>
-                        <input type="text" id="nama" class="form-control" placeholder="Nama Anda">
+                        <input type="text" id="nama" class="form-control">
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-6">
                         <label class="form-label">WA / Telegram</label>
-                        <input type="text" id="kontak" class="form-control" placeholder="@username / No WA">
+                        <input type="text" id="kontak" class="form-control" placeholder="@username">
                     </div>
                 </div>
 
@@ -85,17 +83,22 @@
                     <label class="form-label fw-bold">Metode Pembayaran</label>
                     <select id="pembayaran" class="form-select" onchange="showPaymentDetails()">
                         <option value="">-- Pilih Pembayaran --</option>
-                        <option value="COD">Cash On Delivery (COD)</option>
-                        <option value="ABA Bank">ABA Bank (Cambodia)</option>
-                        <option value="Transfer Rupiah">Transfer Bank (Indonesia)</option>
+                        <option value="COD">COD</option>
+                        <option value="ABA Bank">ABA Bank</option>
+                        <option value="Transfer Rupiah">Transfer Rupiah</option>
                     </select>
+
                     <div id="info-aba" class="payment-info text-center">
-                        <p class="fw-bold">Scan QR ABA Bank:</p>
-                        <img src="https://via.placeholder.com/200x250?text=QR+ABA+BELLA" class="qr-image">
+                        <p class="fw-bold">Scan QR ABA:</p>
+                        <img src="https://via.placeholder.com/150" style="width:150px">
                     </div>
                     <div id="info-transfer" class="payment-info">
-                        <p class="mb-0">BCA: <strong>1234-567-890</strong></p>
-                        <p>A/N: <strong>BELLA CARD INDO</strong></p>
+                        <p>BCA: 1234-567-890 (Bella Card)</p>
+                    </div>
+
+                    <div id="upload-section" class="mt-3">
+                        <label class="form-label fw-bold">Upload Bukti Transfer:</label>
+                        <input type="file" id="bukti_transfer" class="form-control" accept="image/*">
                     </div>
                 </div>
 
@@ -106,95 +109,112 @@
 </div>
 
 <script>
-    let currentPrice = 0;
-    let currentCurrency = "";
-    let minOrder = 1;
-    let selectedName = "";
+    let currentPrice = 0, currentCurrency = "", minOrder = 1, selectedName = "";
 
     function selectProduct(name, price, currency, min, element) {
-        selectedName = name;
-        currentPrice = price;
-        currentCurrency = currency;
-        minOrder = min;
-        
+        selectedName = name; currentPrice = price; currentCurrency = currency; minOrder = min;
         document.getElementById('display-produk').value = name;
         document.getElementById('jumlah').value = min;
-        
         document.querySelectorAll('.card-product').forEach(card => card.classList.remove('selected-product'));
         element.classList.add('selected-product');
-        
         calculateTotal();
     }
 
     function calculateTotal() {
         const qty = document.getElementById('jumlah').value;
-        if (selectedName === "") return;
+        if (!selectedName) return;
         let total = currentPrice * qty;
-        let formattedTotal = currentCurrency === "Baht" ? total + " Baht" : "Rp " + total.toLocaleString();
-        document.getElementById('box-total').innerText = "Total: " + formattedTotal;
+        document.getElementById('box-total').innerText = "Total: " + (currentCurrency === "Baht" ? total + " Baht" : "Rp " + total.toLocaleString());
     }
 
     function showPaymentDetails() {
         const payMethod = document.getElementById('pembayaran').value;
         document.getElementById('info-aba').style.display = (payMethod === 'ABA Bank') ? 'block' : 'none';
         document.getElementById('info-transfer').style.display = (payMethod === 'Transfer Rupiah') ? 'block' : 'none';
+        document.getElementById('upload-section').style.display = (payMethod === 'ABA Bank' || payMethod === 'Transfer Rupiah') ? 'block' : 'none';
     }
 
     function validateAndSend() {
         const qty = parseInt(document.getElementById('jumlah').value);
-        
-        // LOGIKA POPUP JIKA DI BAWAH 10 PCS (Khusus Simcard)
+        const payMethod = document.getElementById('pembayaran').value;
+        const fileInput = document.getElementById('bukti_transfer');
+
         if (selectedName.includes("Simcard") && qty < 10) {
             Swal.fire({
-                title: 'Minimal Order 10 Pcs',
-                text: 'Untuk pembelian di bawah 10 pcs, silakan hubungi admin kami secara langsung.',
+                title: 'Minimal 10 Pcs',
+                text: 'Hubungi @bellatan17 untuk jumlah di bawah 10.',
                 icon: 'info',
-                showCancelButton: true,
-                confirmButtonColor: '#ff85a2',
-                confirmButtonText: 'Hubungi Admin (@bellatan17)',
-                cancelButtonText: 'Tutup'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.open('https://t.me/bellatan17', '_blank');
-                }
-            });
-            return; // Berhenti di sini, tidak kirim ke bot
+                confirmButtonText: 'Chat Admin'
+            }).then((r) => { if(r.isConfirmed) window.open('https://t.me/bellatan17'); });
+            return;
         }
 
-        // Jika lolos validasi, lanjut kirim ke Telegram Bot
+        if ((payMethod === 'ABA Bank' || payMethod === 'Transfer Rupiah') && fileInput.files.length === 0) {
+            Swal.fire('Oops!', 'Harap upload bukti transfer!', 'warning');
+            return;
+        }
+
         sendToTelegram();
     }
 
-    function sendToTelegram() {
-        const token = "8336044571:AAGmUySmH7l6KEktMW49uddxvsFtad6Bxa0"; 
-        const chat_id = "8183121729"; 
+    async function sendToTelegram() {
+        const token = "8336044571:AAGmUySmH7l6KEktMW49uddxvsFtad6Bxa0";
+        const chat_id = "8183121729";
         
         const nama = document.getElementById('nama').value;
         const kontak = document.getElementById('kontak').value;
         const bayar = document.getElementById('pembayaran').value;
         const qty = document.getElementById('jumlah').value;
         const totalText = document.getElementById('box-total').innerText;
+        const fileInput = document.getElementById('bukti_transfer');
 
-        if(!selectedName || !nama || !kontak || !bayar) {
-            Swal.fire('Oops!', 'Lengkapi semua data formulir ya!', 'warning');
-            return;
+        if(!nama || !kontak || !bayar) { Swal.fire('Lengkapi Data!'); return; }
+
+        const caption = `🌸 *PESANAN BARU BELLA CARD* 🌸\n\n` +
+                        `📦 *Produk:* ${selectedName}\n` +
+                        `🔢 *Jumlah:* ${qty} pcs\n` +
+                        `💰 *${totalText}*\n` +
+                        `👤 *Nama:* ${nama}\n` +
+                        `📱 *Kontak:* ${kontak}\n` +
+                        `💳 *Metode:* ${bayar}`;
+
+        // Inline Keyboard untuk Admin (Konfirmasi/Tolak)
+        const keyboard = {
+            inline_keyboard: [
+                [
+                    { text: "✅ Konfirmasi Dana", callback_data: "confirm" },
+                    { text: "❌ Tolak", callback_data: "reject" }
+                ]
+            ]
+        };
+
+        Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+
+        let url, formData = new FormData();
+        
+        if (fileInput.files.length > 0) {
+            url = `https://api.telegram.org/bot${token}/sendPhoto`;
+            formData.append('chat_id', chat_id);
+            formData.append('photo', fileInput.files[0]);
+            formData.append('caption', caption);
+            formData.append('parse_mode', 'Markdown');
+            formData.append('reply_markup', JSON.stringify(keyboard));
+        } else {
+            url = `https://api.telegram.org/bot${token}/sendMessage`;
+            formData.append('chat_id', chat_id);
+            formData.append('text', caption);
+            formData.append('parse_mode', 'Markdown');
+            formData.append('reply_markup', JSON.stringify(keyboard));
         }
 
-        const pesan = `🌸 *PESANAN BELLA CARD* 🌸\n\n` +
-                      `📦 *Produk:* ${selectedName}\n` +
-                      `🔢 *Jumlah:* ${qty} pcs\n` +
-                      `💰 *${totalText}*\n` +
-                      `👤 *Nama:* ${nama}\n` +
-                      `📱 *Kontak:* ${kontak}\n` +
-                      `💳 *Metode:* ${bayar}`;
-
-        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(pesan)}&parse_mode=Markdown`;
-
-        fetch(url).then(res => { 
-            if(res.ok) {
-                Swal.fire('Berhasil!', 'Pesanan Anda telah terkirim ke Owner.', 'success');
-            } 
-        });
+        try {
+            const response = await fetch(url, { method: 'POST', body: formData });
+            if(response.ok) {
+                Swal.fire('Berhasil!', 'Pesanan & Bukti telah dikirim ke Admin.', 'success');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'Gagal mengirim ke Telegram.', 'error');
+        }
     }
 </script>
 </body>
