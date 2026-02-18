@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bella Card - Official Store</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --bella-pink: #ff85a2; --bella-soft-pink: #fff0f3; }
+        body { background-color: var(--bella-soft-pink); font-family: 'Poppins', sans-serif; padding-bottom: 50px; }
+        .navbar { background-color: var(--bella-pink) !important; }
+        .card-product { border: 2px solid transparent; transition: 0.3s; cursor: pointer; border-radius: 15px; background: white; }
+        .card-product:hover { border-color: var(--bella-pink); transform: translateY(-5px); }
+        .selected-product { border-color: var(--bella-pink) !important; background-color: #ffeef2 !important; }
+        .btn-pink { background-color: var(--bella-pink); color: white; border-radius: 25px; font-weight: bold; }
+        .btn-pink:hover { background-color: #ef7491; color: white; }
+        .payment-info { display: none; background: #ffffff; border-radius: 10px; padding: 15px; margin-top: 10px; border: 1px dashed var(--bella-pink); }
+        .total-box { background: #ffd1dc; padding: 15px; border-radius: 10px; font-size: 1.2rem; font-weight: bold; color: #d63384; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container text-center"><a class="navbar-brand fw-bold m-auto" href="#">🌸 BELLA CARD STORE 🌸</a></div>
+</nav>
+
+<div class="container">
+    <h4 class="text-center mb-4" style="color: #d63384;">Pilih Produk</h4>
+    
+    <div class="row mb-5 text-center">
+        <div class="col-md-4 mb-3">
+            <div class="card card-product p-3" onclick="selectProduct('Simcard Tsel', 100, 'Baht', 10, this)">
+                <h6 class="fw-bold">Simcard Tsel</h6>
+                <p class="text-danger fw-bold mb-1">100 Baht / pcs</p>
+                <p class="small text-muted">Min. 10 pcs</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card card-product p-3" onclick="selectProduct('Simcard Byu', 80, 'Baht', 10, this)">
+                <h6 class="fw-bold">Simcard Byu</h6>
+                <p class="text-danger fw-bold mb-1">80 Baht / pcs</p>
+                <p class="small text-muted">Min. 10 pcs</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card card-product p-3" onclick="selectProduct('Database 1000', 200000, 'Rp', 1, this)">
+                <h6 class="fw-bold">Database 1000</h6>
+                <p class="text-danger fw-bold mb-1">Rp 200.000</p>
+                <p class="small text-muted">Data Premium</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm p-4">
+                <h5 class="fw-bold border-bottom pb-2 mb-4">Detail Pemesanan</h5>
+                
+                <div class="row mb-3">
+                    <div class="col-md-7">
+                        <label class="form-label fw-bold">Produk:</label>
+                        <input type="text" id="display-produk" class="form-control border-0 fw-bold text-danger" value="Belum memilih produk" readonly>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold">Jumlah (Pcs):</label>
+                        <input type="number" id="jumlah" class="form-control" value="10" min="1" oninput="calculateTotal()">
+                    </div>
+                </div>
+
+                <div class="total-box text-center mb-4" id="box-total">Total: -</div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" id="nama" class="form-control" placeholder="Nama Anda">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">WA / Telegram</label>
+                        <input type="text" id="kontak" class="form-control" placeholder="@username / No WA">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Metode Pembayaran</label>
+                    <select id="pembayaran" class="form-select" onchange="showPaymentDetails()">
+                        <option value="">-- Pilih Pembayaran --</option>
+                        <option value="COD">Cash On Delivery (COD)</option>
+                        <option value="ABA Bank">ABA Bank (Cambodia)</option>
+                        <option value="Transfer Rupiah">Transfer Bank (Indonesia)</option>
+                    </select>
+                    <div id="info-aba" class="payment-info text-center">
+                        <p class="fw-bold">Scan QR ABA Bank:</p>
+                        <img src="https://via.placeholder.com/200x250?text=QR+ABA+BELLA" class="qr-image">
+                    </div>
+                    <div id="info-transfer" class="payment-info">
+                        <p class="mb-0">BCA: <strong>1234-567-890</strong></p>
+                        <p>A/N: <strong>BELLA CARD INDO</strong></p>
+                    </div>
+                </div>
+
+                <button class="btn btn-pink w-100 py-3" onclick="validateAndSend()">KIRIM PESANAN</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPrice = 0;
+    let currentCurrency = "";
+    let minOrder = 1;
+    let selectedName = "";
+
+    function selectProduct(name, price, currency, min, element) {
+        selectedName = name;
+        currentPrice = price;
+        currentCurrency = currency;
+        minOrder = min;
+        
+        document.getElementById('display-produk').value = name;
+        document.getElementById('jumlah').value = min;
+        
+        document.querySelectorAll('.card-product').forEach(card => card.classList.remove('selected-product'));
+        element.classList.add('selected-product');
+        
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        const qty = document.getElementById('jumlah').value;
+        if (selectedName === "") return;
+        let total = currentPrice * qty;
+        let formattedTotal = currentCurrency === "Baht" ? total + " Baht" : "Rp " + total.toLocaleString();
+        document.getElementById('box-total').innerText = "Total: " + formattedTotal;
+    }
+
+    function showPaymentDetails() {
+        const payMethod = document.getElementById('pembayaran').value;
+        document.getElementById('info-aba').style.display = (payMethod === 'ABA Bank') ? 'block' : 'none';
+        document.getElementById('info-transfer').style.display = (payMethod === 'Transfer Rupiah') ? 'block' : 'none';
+    }
+
+    function validateAndSend() {
+        const qty = parseInt(document.getElementById('jumlah').value);
+        
+        // LOGIKA POPUP JIKA DI BAWAH 10 PCS (Khusus Simcard)
+        if (selectedName.includes("Simcard") && qty < 10) {
+            Swal.fire({
+                title: 'Minimal Order 10 Pcs',
+                text: 'Untuk pembelian di bawah 10 pcs, silakan hubungi admin kami secara langsung.',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#ff85a2',
+                confirmButtonText: 'Hubungi Admin (@bellatan17)',
+                cancelButtonText: 'Tutup'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.open('https://t.me/bellatan17', '_blank');
+                }
+            });
+            return; // Berhenti di sini, tidak kirim ke bot
+        }
+
+        // Jika lolos validasi, lanjut kirim ke Telegram Bot
+        sendToTelegram();
+    }
+
+    function sendToTelegram() {
+        const token = "8336044571:AAGmUySmH7l6KEktMW49uddxvsFtad6Bxa0"; 
+        const chat_id = "8183121729"; 
+        
+        const nama = document.getElementById('nama').value;
+        const kontak = document.getElementById('kontak').value;
+        const bayar = document.getElementById('pembayaran').value;
+        const qty = document.getElementById('jumlah').value;
+        const totalText = document.getElementById('box-total').innerText;
+
+        if(!selectedName || !nama || !kontak || !bayar) {
+            Swal.fire('Oops!', 'Lengkapi semua data formulir ya!', 'warning');
+            return;
+        }
+
+        const pesan = `🌸 *PESANAN BELLA CARD* 🌸\n\n` +
+                      `📦 *Produk:* ${selectedName}\n` +
+                      `🔢 *Jumlah:* ${qty} pcs\n` +
+                      `💰 *${totalText}*\n` +
+                      `👤 *Nama:* ${nama}\n` +
+                      `📱 *Kontak:* ${kontak}\n` +
+                      `💳 *Metode:* ${bayar}`;
+
+        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(pesan)}&parse_mode=Markdown`;
+
+        fetch(url).then(res => { 
+            if(res.ok) {
+                Swal.fire('Berhasil!', 'Pesanan Anda telah terkirim ke Owner.', 'success');
+            } 
+        });
+    }
+</script>
+</body>
+</html>
