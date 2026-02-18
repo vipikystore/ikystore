@@ -102,6 +102,13 @@
                     </div>
                 </div>
 
+                <div class="mb-4 text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="getLocation()">
+                        📍 Bagikan Lokasi Live (Wajib COD)
+                    </button>
+                    <p id="status-lokasi" class="small mt-1 text-muted text-truncate">Lokasi belum diambil</p>
+                </div>
+
                 <button class="btn btn-pink w-100 py-3" onclick="validateAndSend()">KIRIM PESANAN</button>
             </div>
         </div>
@@ -109,7 +116,7 @@
 </div>
 
 <script>
-    let currentPrice = 0, currentCurrency = "", minOrder = 1, selectedName = "";
+    let currentPrice = 0, currentCurrency = "", minOrder = 1, selectedName = "", userCoords = "Tidak ada lokasi";
 
     function selectProduct(name, price, currency, min, element) {
         selectedName = name; currentPrice = price; currentCurrency = currency; minOrder = min;
@@ -132,6 +139,18 @@
         document.getElementById('info-aba').style.display = (payMethod === 'ABA Bank') ? 'block' : 'none';
         document.getElementById('info-transfer').style.display = (payMethod === 'Transfer Rupiah') ? 'block' : 'none';
         document.getElementById('upload-section').style.display = (payMethod === 'ABA Bank' || payMethod === 'Transfer Rupiah') ? 'block' : 'none';
+    }
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            document.getElementById('status-lokasi').innerText = "Mengambil koordinat GPS...";
+            navigator.geolocation.getCurrentPosition((position) => {
+                userCoords = `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`;
+                document.getElementById('status-lokasi').innerText = "✅ Lokasi Berhasil Terkunci";
+            }, () => {
+                Swal.fire('Gagal GPS', 'Harap izinkan akses lokasi di browser Anda.', 'error');
+            });
+        }
     }
 
     function validateAndSend() {
@@ -176,44 +195,39 @@
                         `💰 *${totalText}*\n` +
                         `👤 *Nama:* ${nama}\n` +
                         `📱 *Kontak:* ${kontak}\n` +
-                        `💳 *Metode:* ${bayar}`;
+                        `💳 *Metode:* ${bayar}\n` +
+                        `📍 *Lokasi Maps:* ${userCoords}`;
 
-        // Inline Keyboard untuk Admin (Konfirmasi/Tolak)
         const keyboard = {
-            inline_keyboard: [
-                [
-                    { text: "✅ Konfirmasi Dana", callback_data: "confirm" },
-                    { text: "❌ Tolak", callback_data: "reject" }
-                ]
-            ]
+            inline_keyboard: [[
+                { text: "✅ Konfirmasi Dana", callback_data: "confirm" },
+                { text: "❌ Tolak", callback_data: "reject" }
+            ]]
         };
 
-        Swal.fire({ title: 'Mengirim...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+        Swal.fire({ title: 'Mengirim Pesanan...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
         let url, formData = new FormData();
-        
+        formData.append('chat_id', chat_id);
+        formData.append('reply_markup', JSON.stringify(keyboard));
+        formData.append('parse_mode', 'Markdown');
+
         if (fileInput.files.length > 0) {
             url = `https://api.telegram.org/bot${token}/sendPhoto`;
-            formData.append('chat_id', chat_id);
             formData.append('photo', fileInput.files[0]);
             formData.append('caption', caption);
-            formData.append('parse_mode', 'Markdown');
-            formData.append('reply_markup', JSON.stringify(keyboard));
         } else {
             url = `https://api.telegram.org/bot${token}/sendMessage`;
-            formData.append('chat_id', chat_id);
             formData.append('text', caption);
-            formData.append('parse_mode', 'Markdown');
-            formData.append('reply_markup', JSON.stringify(keyboard));
         }
 
         try {
             const response = await fetch(url, { method: 'POST', body: formData });
             if(response.ok) {
-                Swal.fire('Berhasil!', 'Pesanan & Bukti telah dikirim ke Admin.', 'success');
+                Swal.fire('Berhasil!', 'Pesanan & Lokasi telah terkirim.', 'success');
             }
         } catch (e) {
-            Swal.fire('Error', 'Gagal mengirim ke Telegram.', 'error');
+            Swal.fire('Error', 'Gagal kirim data.', 'error');
         }
     }
 </script>
